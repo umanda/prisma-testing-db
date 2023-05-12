@@ -7,10 +7,11 @@ If you find connecting and configuring databases to be a hassle when using Prism
 ## Suport databases
 
 - PostgreSQL
-- Cockroach DB
-- MySql
-- MSSQL
-- Mongo DB
+- MySQL
+- MariaDB
+- SQL Server
+- MongoDB
+- CockroachDB
 
 ## Using docker-compose for databases
 

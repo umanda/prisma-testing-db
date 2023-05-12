@@ -1,7 +1,6 @@
 version: '3.7'
 
-# For connection urls to the following instances, see
-# https://github.com/prisma/prisma/blob/main/TESTING.md#environment-variables
+# For connection urls to the following instances, see .env.example
 services:
   postgres:
     image: postgres:10
