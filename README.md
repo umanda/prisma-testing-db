@@ -1,6 +1,8 @@
-# Docker
+# Docker images for Testing & Local development of Prisma based apps
 
-This dockers will help you to test prisma on your local development
+These Docker images are designed to facilitate the local development and testing of applications based on Prisma.
+
+If you find connecting and configuring databases to be a hassle when using Prisma, this docker can simplify the process of testing and developing applications with Prisma on your local environment.
 
 ## Suport databases
 
