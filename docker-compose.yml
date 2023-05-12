@@ -1,0 +1,122 @@
+version: '3.7'
+
+# For connection urls to the following instances, see
+# https://github.com/prisma/prisma/blob/main/TESTING.md#environment-variables
+services:
+  postgres:
+    image: postgres:10
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=tests
+      - POSTGRES_USER=prisma
+      - POSTGRES_PASSWORD=prisma
+    ports:
+      - '5432:5432'
+
+  postgres_isolated:
+    image: postgres:10
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=tests
+      - POSTGRES_USER=prisma
+      - POSTGRES_PASSWORD=prisma
+    ports:
+      - '5435:5432'
+
+  cockroachdb:
+    image: prismagraphql/cockroachdb-custom:22.1.0
+    restart: unless-stopped
+    command: start-single-node --insecure
+    ports:
+      - '26257:26257'
+
+  # Planetscale
+  # From https://github.com/prisma/prisma-engines/blob/976a00ae3c30ab9507fa742986c9c6f5327ba10f/docker-compose.yml
+  vitess-8:
+    image: vitess/vttestserver:mysql80@sha256:06066301568d583ec19d0f8f49626e7d08e3eb9fdcfffaac094e0b7c63731bec
+    restart: unless-stopped
+    ports:
+      - 33807:33807
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h127.0.0.1', '-P33577']
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 25s
+    environment:
+      PORT: '33804' # unused in testing, but required by vttestserver
+      KEYSPACES: 'unsharded' # unused in testing, but required by vttestserver
+      NUM_SHARDS: '1' # unused in testing, but required by vttestserver
+      MYSQL_BIND_HOST: '0.0.0.0'
+      FOREIGN_KEY_MODE: 'disallow'
+      MYSQL_MAX_CONNECTIONS: 100000
+      TABLET_REFRESH_INTERVAL: '1s'
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password --lower_case_table_names=1
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tests
+      - MYSQL_USER=prisma
+    ports:
+      - '3306:3306'
+
+  mysql_isolated:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password --lower_case_table_names=1
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tests
+      - MYSQL_USER=prisma
+      - MYSQL_PASSWORD=prisma
+    ports:
+      - '3307:3306'
+
+  mariadb:
+    image: mariadb:10
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tests
+      - MYSQL_USER=prisma
+      - MYSQL_PASSWORD=prisma
+    ports:
+      - '4306:3306'
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Pr1sm4_Pr1sm4
+    ports:
+      - '1433:1433'
+
+  mongodb_migrate:
+    image: mongo:4
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+      MONGO_INITDB_DATABASE: tests-migrate
+    ports:
+      - '27017:27017'
+
+  mongodb_migrate_seed:
+    build: ./mongodb_migrate_seed
+    depends_on:
+      - mongodb_migrate
+
+  # Replica Set (required for Prisma Client)
+  mongo:
+    build: ./mongodb_replica
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+      MONGO_REPLICA_HOST: localhost
+      MONGO_REPLICA_PORT: 27018
+    ports:
+      - '27018:27018'
